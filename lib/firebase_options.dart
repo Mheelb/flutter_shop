@@ -69,6 +69,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1068162247377',
     projectId: 'flutter-shop-mds',
     storageBucket: 'flutter-shop-mds.firebasestorage.app',
+    iosClientId: '1068162247377-pgf2ua7ghoiarpvdcc06768afbf3rsi9.apps.googleusercontent.com',
     iosBundleId: 'com.example.flutterShop',
   );
+
 }
