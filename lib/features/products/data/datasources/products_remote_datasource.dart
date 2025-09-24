@@ -21,6 +21,18 @@ class ProductsRemoteDataSource {
     final List<dynamic> decoded = json.decode(response.body) as List<dynamic>;
     return decoded.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
   }
+
+  Future<Product> fetchProduct(int id) async {
+    final uri = Uri.parse('https://fakestoreapi.com/products/$id');
+    final response = await httpClient.get(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load product $id (${response.statusCode})');
+    }
+
+    final Map<String, dynamic> decoded = json.decode(response.body) as Map<String, dynamic>;
+    return Product.fromJson(decoded);
+  }
 }
 
 

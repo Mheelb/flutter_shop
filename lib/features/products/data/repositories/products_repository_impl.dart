@@ -12,6 +12,11 @@ class ProductsRepositoryImpl implements ProductsRepository {
   Future<List<Product>> fetchAllProducts() {
     return remoteDataSource.fetchAllProducts();
   }
+
+  @override
+  Future<Product> fetchProduct(int id) {
+    return remoteDataSource.fetchProduct(id);
+  }
 }
 
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/products_providers.dart';
+import 'product_details_page.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -67,7 +68,16 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailsPage(
+                                  productId: p.id,
+                                  initialProduct: p,
+                                ),
+                              ),
+                            );
+                          },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
