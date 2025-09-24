@@ -70,13 +70,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               children: [
                 // Logo et titre
                 Icon(
-                  Icons.movie,
+                  Icons.store,
                   size: 80,
                   color: Theme.of(context).primaryColor,
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Flutter Shop VOD',
+                  'SHOPIFUN',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,

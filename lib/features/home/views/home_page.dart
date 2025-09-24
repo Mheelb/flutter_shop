@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
+import '../../products/presentation/view/products_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -11,7 +12,7 @@ class HomePage extends ConsumerWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Shop VOD'),
+        title: const Text('Flutter Shop'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -55,14 +56,11 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Navigation vers le catalogue
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Catalogue à venir !'),
-                    ),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProductsPage()),
                   );
                 },
-                icon: const Icon(Icons.video_library),
+                icon: const Icon(Icons.shopping_bag),
                 label: const Text('Voir le catalogue'),
               ),
             ],
