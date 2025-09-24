@@ -19,6 +19,10 @@ class ProductsViewModel extends StateNotifier<ProductsState> {
       state = state.copyWith(isLoading: false);
     }
   }
+
+  void setQuery(String query) {
+    state = state.copyWith(query: query);
+  }
 }
 
 

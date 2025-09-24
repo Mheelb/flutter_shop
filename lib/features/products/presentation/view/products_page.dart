@@ -25,6 +25,22 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catalogue'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SizedBox(
+              height: 44,
+              child: TextField(
+                onChanged: ref.read(productsViewModelProvider.notifier).setQuery,
+                decoration: const InputDecoration(
+                  hintText: 'Rechercher un produit...',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
@@ -72,9 +88,9 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                             crossAxisSpacing: 12,
                             childAspectRatio: 0.68,
                           ),
-                          itemCount: state.products.length,
+                          itemCount: state.filteredProducts.length,
                           itemBuilder: (context, index) {
-                            final p = state.products[index];
+                            final p = state.filteredProducts[index];
                             return Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
