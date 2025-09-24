@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../products/presentation/view/products_page.dart';
 import '../../cart/presentation/view/cart_page.dart';
+import '../../profile/presentation/view/profile_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -34,9 +35,20 @@ class HomePage extends ConsumerWidget {
             onSelected: (value) {
               if (value == 'logout') {
                 ref.read(authServiceProvider).signOut();
+              } else if (value == 'profile') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'profile',
+                child: ListTile(
+                  leading: Icon(Icons.person_outline),
+                  title: Text('Profil'),
+                ),
+              ),
               const PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
