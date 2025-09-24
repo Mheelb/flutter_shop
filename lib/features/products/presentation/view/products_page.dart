@@ -50,18 +50,32 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       ),
                     ),
                   )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.68,
-                    ),
-                    itemCount: state.products.length,
-                    itemBuilder: (context, index) {
-                      final p = state.products[index];
-                      return Card(
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await ref.read(productsViewModelProvider.notifier).load();
+                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        int crossAxis = 2;
+                        if (constraints.maxWidth >= 1200) {
+                          crossAxis = 5;
+                        } else if (constraints.maxWidth >= 900) {
+                          crossAxis = 4;
+                        } else if (constraints.maxWidth >= 600) {
+                          crossAxis = 3;
+                        }
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(12),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxis,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.68,
+                          ),
+                          itemCount: state.products.length,
+                          itemBuilder: (context, index) {
+                            final p = state.products[index];
+                            return Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -125,7 +139,10 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                           ),
                         ),
                       );
-                    },
+                          },
+                        );
+                      },
+                    ),
                   ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/product_details_providers.dart';
 import '../../domain/models/product.dart';
+import '../../../cart/presentation/providers/cart_providers.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -88,7 +89,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            final id = product.id;
+                            ref.read(cartViewModelProvider.notifier).addProduct(id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Ajouté au panier')),
+                            );
+                          },
                           icon: const Icon(Icons.add_shopping_cart),
                           label: const Text('Ajouter au panier'),
                           style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),

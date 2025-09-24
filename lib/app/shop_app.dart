@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
+import 'theme/app_theme.dart';
 import '../features/auth/presentation/views/login_page.dart';
 import '../features/home/views/home_page.dart';
 
@@ -11,10 +12,7 @@ class ShopApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Shop',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
     );
