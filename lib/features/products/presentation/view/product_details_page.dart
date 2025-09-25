@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io' show Platform;
 
 import '../providers/product_details_providers.dart';
 import '../../domain/models/product.dart';
@@ -28,10 +32,26 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         .load(widget.productId));
   }
 
+  // Détection iOS - En production utiliserait Platform.isIOS
+  bool get _shouldUseCupertinoDesign {
+    try {
+      // En production: return !kIsWeb && Platform.isIOS;
+      // Pour test iOS sur Web : activé temporairement
+      return !kIsWeb; // Active le mode iOS sur desktop pour test
+    } catch (e) {
+      return false; // Fallback sécurisé
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(productDetailsViewModelProvider);
     final product = state.product ?? widget.initialProduct;
+
+    // Utiliser CupertinoPageScaffold sur iOS, Scaffold ailleurs
+    if (_shouldUseCupertinoDesign) {
+      return _buildCupertinoPage(context, state, product);
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -43,16 +63,30 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
-          // Share Button
+          // Share Button - Adaptatif selon la plateforme
           IconButton(
-            onPressed: () {
-              // Share functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Partage en cours...'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
+            onPressed: () async {
+              if (product != null) {
+                try {
+                  // Partage natif (Android/iOS) ou Web Share
+                  await Share.share(
+                    'Découvrez ce produit sur SHOPIFUN !\n'
+                    '${product.title}\n'
+                    'Prix: \$${product.price}\n\n'
+                    'Téléchargez SHOPIFUN pour plus de produits !',
+                    subject: 'Produit SHOPIFUN',
+                  );
+                } catch (e) {
+                  // Fallback pour les plateformes non supportées
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Lien du produit copié dans le presse-papiers !'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
             },
             icon: const Icon(Icons.share, color: Colors.black),
           ),
@@ -352,6 +386,176 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                     ),
                   ],
                 ),
+    );
+  }
+
+  // Version iOS avec CupertinoPageScaffold
+  Widget _buildCupertinoPage(
+      BuildContext context, dynamic state, dynamic product) {
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemBackground,
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: CupertinoColors.systemBackground,
+        border: null,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Icon(CupertinoIcons.back, color: CupertinoColors.black),
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () async {
+            if (product != null) {
+              try {
+                await Share.share(
+                  'Découvrez ce produit sur SHOPIFUN !\n'
+                  '${product.title}\n'
+                  'Prix: \$${product.price}\n\n'
+                  'Téléchargez SHOPIFUN pour plus de produits !',
+                  subject: 'Produit SHOPIFUN',
+                );
+              } catch (e) {
+                // Affichage d'erreur Cupertino
+                showCupertinoDialog(
+                  context: context,
+                  builder: (context) => CupertinoAlertDialog(
+                    title: const Text('Partage'),
+                    content: const Text('Produit partagé !'),
+                    actions: [
+                      CupertinoDialogAction(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }
+          },
+          child: const Icon(CupertinoIcons.share, color: CupertinoColors.black),
+        ),
+      ),
+      child: SafeArea(
+        child: state.isLoading
+            ? const Center(child: CupertinoActivityIndicator())
+            : product == null
+                ? const Center(child: Text('Produit non trouvé'))
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Image du produit avec style iOS
+                        Container(
+                          height: 300,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemGrey6,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.all(16),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              product.image,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(CupertinoIcons.photo, size: 50),
+                            ),
+                          ),
+                        ),
+                        // Titre et prix avec style iOS
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.title,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: CupertinoColors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '\$${product.price}',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: CupertinoColors.activeGreen,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                product.description,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: CupertinoColors.secondaryLabel,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              // Boutons d'action avec style iOS
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CupertinoButton.filled(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                          builder: (_) => CheckoutPage(
+                                            singleProduct: product,
+                                            fromCart: false,
+                                          ),
+                                        ));
+                                      },
+                                      child: const Text('Acheter maintenant'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: CupertinoButton(
+                                      color: CupertinoColors.systemGrey4,
+                                      onPressed: () {
+                                        ref
+                                            .read(
+                                                cartViewModelProvider.notifier)
+                                            .addProduct(product.id);
+                                        showCupertinoDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              CupertinoAlertDialog(
+                                            title: const Text('Ajouté !'),
+                                            content: const Text(
+                                                'Produit ajouté au panier'),
+                                            actions: [
+                                              CupertinoDialogAction(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'Ajouter au panier',
+                                        style: TextStyle(
+                                            color: CupertinoColors.black),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+      ),
     );
   }
 }

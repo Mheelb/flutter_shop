@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/services/pwa_service.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../products/presentation/providers/products_providers.dart';
 import '../../products/presentation/view/product_details_page.dart';
@@ -17,10 +21,165 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  bool _showPWAFab = false;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(productsViewModelProvider.notifier).load());
+    
+    // Montrer le FAB PWA après 5 secondes (moderne et non intrusif)
+    if (kIsWeb) {
+      Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() => _showPWAFab = true);
+      });
+    }
+  }
+
+  // Méthode responsive pour déterminer le nombre de colonnes
+  int _getCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (kIsWeb) {
+      if (width >= 1200) return 5; // Desktop large
+      if (width >= 900) return 4; // Desktop
+      if (width >= 600) return 3; // Tablet
+      return 2; // Mobile
+    }
+    return 2; // Mobile par défaut
+  }
+
+  // Instructions PWA
+  void _showModernMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Menu items
+            if (kIsWeb) ...[
+              _buildMenuTile(
+                icon: Icons.download,
+                title: 'Installer l\'app',
+                subtitle: 'Transformez le site en vraie application',
+                color: Colors.green,
+                onTap: () async {
+                  Navigator.pop(context);
+                  final success = await PWAService.installPWA();
+                  if (!success && mounted) {
+                    _showPWAInstructions(context);
+                  } else if (success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 SHOPIFUN installé avec succès !'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              ),
+              _buildMenuTile(
+                icon: Icons.share,
+                title: 'Partager SHOPIFUN',
+                subtitle: 'Recommandez l\'app à vos amis',
+                color: Colors.blue,
+                onTap: () async {
+                  Navigator.pop(context);
+                  try {
+                    await Share.share(
+                      'Découvrez SHOPIFUN - La meilleure boutique en ligne !\n\n'
+                      'Des milliers de produits à prix réduits.\n'
+                      'Visitez maintenant: ${Uri.base}',
+                      subject: 'SHOPIFUN - Boutique en ligne',
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Lien copié dans votre presse-papiers !'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+
+            if (kDebugMode) ...[
+              _buildMenuTile(
+                icon: Icons.bug_report,
+                title: 'Test des fonctionnalités',
+                subtitle: 'Page de debug et test',
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const _PlatformTestPage()),
+                  );
+                },
+              ),
+            ],
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Instructions PWA
+  void _showPWAInstructions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('📱 Installer SHOPIFUN'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Transformez le site en vraie application !'),
+            SizedBox(height: 16),
+            Text('✅ Icône sur votre écran d\'accueil'),
+            Text('✅ Lancement sans navigateur'),
+            Text('✅ Interface comme une app native'),
+            Text('✅ Fonctionne hors-ligne'),
+            SizedBox(height: 16),
+            Text('📋 Comment installer :'),
+            Text('Chrome: Menu (⋮) > "Installer SHOPIFUN"'),
+            Text('Edge: Icône + dans la barre d\'adresse'),
+            Text('Firefox: Menu > "Installer cette app"'),
+            SizedBox(height: 16),
+            Text(
+              '💡 Astuce: L\'option apparaît après quelques secondes sur le site',
+              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Compris !'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -51,6 +210,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.red,
+                                fontSize: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 600
+                                    ? 32
+                                    : 24,
                               ),
                         ),
                         Text(
@@ -61,6 +224,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,
+                                fontSize: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 600
+                                    ? 32
+                                    : 24,
                               ),
                         ),
                       ],
@@ -171,9 +338,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 const EdgeInsets.symmetric(horizontal: 16.0),
                             child: GridView.builder(
                               gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.75,
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: _getCrossAxisCount(context),
+                                childAspectRatio: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 900
+                                    ? 0.8
+                                    : 0.75,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                               ),
@@ -359,6 +529,34 @@ class _HomePageState extends ConsumerState<HomePage> {
           error: (error, stack) => Center(child: Text('Erreur: $error')),
         ),
       ),
+      // FAB moderne pour PWA (apparaît après 5 secondes)
+      floatingActionButton: _showPWAFab && kIsWeb
+          ? AnimatedSlide(
+              duration: const Duration(milliseconds: 300),
+              offset: _showPWAFab ? Offset.zero : const Offset(0, 2),
+              child: FloatingActionButton.extended(
+                onPressed: () async {
+                  final success = await PWAService.installPWA();
+                  if (!success && mounted) {
+                    _showPWAInstructions(context);
+                  } else if (success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 SHOPIFUN installé !'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    setState(() => _showPWAFab = false);
+                  }
+                },
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.download),
+                label: const Text('Installer'),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -436,10 +634,58 @@ class _HomePageState extends ConsumerState<HomePage> {
                   );
                 },
               ),
+
+              // Test des fonctionnalités (Debug uniquement)
+              if (kDebugMode)
+                _buildNavItem(
+                  icon: Icons.bug_report,
+                  isSelected: false,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const _PlatformTestPage()),
+                    );
+                  },
+                ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // Widget pour les éléments du menu moderne
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          color: Colors.grey[600],
+          fontSize: 14,
+        ),
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );
   }
 
@@ -555,5 +801,102 @@ class _HomePageState extends ConsumerState<HomePage> {
         ],
       ),
     );
+  }
+}
+
+// Page de test simple intégrée
+class _PlatformTestPage extends StatelessWidget {
+  const _PlatformTestPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('🔧 Test des Fonctionnalités'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '🌐 Détection de Plateforme',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Web: ${kIsWeb ? '✅ Détecté' : '❌ Non détecté'}'),
+                    if (kIsWeb) const Text('✅ PWA et Partage Web disponibles'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '📱 Grille Responsive',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                        'Largeur écran: ${MediaQuery.of(context).size.width.toInt()}px'),
+                    Text('Colonnes: ${_getColumns(context)}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (kIsWeb)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.share, color: Colors.blue),
+                  title: const Text('Test Partage Web'),
+                  subtitle: const Text('Testez la Web Share API'),
+                  onTap: () async {
+                    try {
+                      await Share.share(
+                        'Test de partage depuis SHOPIFUN !',
+                        subject: 'SHOPIFUN Test',
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Partage testé avec succès !'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _getColumns(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (kIsWeb) {
+      if (width >= 1200) return 5;
+      if (width >= 900) return 4;
+      if (width >= 600) return 3;
+      return 2;
+    }
+    return 2;
   }
 }

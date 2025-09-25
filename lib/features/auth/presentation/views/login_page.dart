@@ -85,11 +85,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Bienvenue chez SHOPIFUN',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                  RichText(
+                    text: const TextSpan(
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      children: [
+                        TextSpan(text: 'Bienvenue chez '),
+                        TextSpan(
+                          text: 'SHOPI',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        TextSpan(
+                          text: 'FUN',
+                          style: TextStyle(color: Colors.green),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),

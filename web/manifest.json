@@ -1,13 +1,15 @@
 {
-    "name": "flutter_shop",
-    "short_name": "flutter_shop",
-    "start_url": ".",
+    "name": "SHOPIFUN - Boutique en ligne",
+    "short_name": "SHOPIFUN",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#4CAF50",
+    "theme_color": "#4CAF50",
+    "description": "SHOPIFUN - Votre boutique en ligne préférée avec les meilleurs produits",
+    "orientation": "any",
     "prefer_related_applications": false,
+    "categories": ["shopping", "business"],
     "icons": [
         {
             "src": "icons/Icon-192.png",
