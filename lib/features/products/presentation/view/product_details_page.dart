@@ -119,31 +119,17 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 ),
               );
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      ref
-                          .read(favoritesProvider.notifier)
-                          .toggleFavorite(product.id);
-                    },
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.red,
-                      size: 24,
-                    ),
-                  ),
-                  if (isFavorite)
-                    Text(
-                      "J'adore",
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                ],
+              return IconButton(
+                onPressed: () {
+                  ref
+                      .read(favoritesProvider.notifier)
+                      .toggleFavorite(product.id);
+                },
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
+                  size: 24,
+                ),
               );
             },
           ),

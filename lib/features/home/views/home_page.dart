@@ -7,6 +7,7 @@ import '../../cart/presentation/view/cart_page.dart';
 import '../../cart/presentation/providers/cart_providers.dart';
 import '../../profile/presentation/view/profile_page.dart';
 import '../../favorites/presentation/providers/favorites_providers.dart';
+import '../../favorites/presentation/view/favorites_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -358,39 +359,199 @@ class _HomePageState extends ConsumerState<HomePage> {
           error: (error, stack) => Center(child: Text('Erreur: $error')),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1) {
-            // Search - déjà sur la page principale
-          } else if (index == 2) {
-            // Favorites - à implémenter si nécessaire
-          } else if (index == 3) {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProfilePage()),
-            );
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Home
+              _buildNavItem(
+                icon: Icons.home,
+                isSelected: true,
+                onTap: () {},
+              ),
+
+              // Cart
+              Consumer(
+                builder: (context, ref, child) {
+                  final cartState = ref.watch(cartViewModelProvider);
+                  final itemCount = cartState.items.fold<int>(
+                    0,
+                    (sum, item) => sum + item.quantity,
+                  );
+
+                  return _buildNavItemWithBadge(
+                    icon: Icons.shopping_cart_outlined,
+                    isSelected: false,
+                    badgeCount: itemCount,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CartPage()),
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // Favorites
+              Consumer(
+                builder: (context, ref, child) {
+                  final favoritesState = ref.watch(favoritesProvider);
+                  final hasFavorites = favoritesState.favoriteIds.isNotEmpty;
+
+                  return _buildNavItemWithNotification(
+                    icon: Icons.favorite_border,
+                    isSelected: false,
+                    hasNotification: hasFavorites,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const FavoritesPage()),
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // Profile
+              _buildNavItem(
+                icon: Icons.person_outline,
+                isSelected: false,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.green : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? Colors.white : Colors.grey[600],
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithBadge({
+    required IconData icon,
+    required bool isSelected,
+    required int badgeCount,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.green : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey[600],
+              size: 24,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Favorites',
+          if (badgeCount > 0)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithNotification({
+    required IconData icon,
+    required bool isSelected,
+    required bool hasNotification,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.green : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey[600],
+              size: 24,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
+          if (hasNotification)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
         ],
       ),
     );
