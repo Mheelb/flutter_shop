@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../auth/presentation/views/login_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -20,7 +21,7 @@ class ProfilePage extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: const Text(
-          'My Profile',
+          'Mon Profil',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -55,7 +56,7 @@ class ProfilePage extends ConsumerWidget {
                           radius: 35,
                           backgroundColor: Colors.grey[200],
                           backgroundImage: const NetworkImage(
-                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+                            'https://static.wikia.nocookie.net/onepiece/images/6/6d/Monkey_D._Luffy_Anime_Post_Timeskip_Infobox.png',
                           ),
                         ),
                         Positioned(
@@ -84,7 +85,7 @@ class ProfilePage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Jaydon Mango',
+                            'Monkey D. Luffy',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -92,7 +93,7 @@ class ProfilePage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user?.email ?? 'jay_don64@gmail.com',
+                            user?.email ?? 'luffy.pirate@grandline.com',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -108,49 +109,108 @@ class ProfilePage extends ConsumerWidget {
               const SizedBox(height: 30),
 
               // Account Settings Section
-              _buildSectionTitle('ACCOUNT SETTINGS'),
+              _buildSectionTitle('PARAMÈTRES DU COMPTE'),
               const SizedBox(height: 16),
 
               _buildMenuItem(
                 icon: Icons.person_outline,
-                title: 'Personal Information',
-                onTap: () {},
+                title: 'Informations personnelles',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'Informations personnelles',
+                      'Nom: Monkey D. Luffy\n'
+                          'Profession: Capitaine Pirate\n'
+                          'Équipage: Chapeau de Paille\n'
+                          'Rêve: Devenir le Roi des Pirates\n'
+                          'Prime: 3,000,000,000 Berry');
+                },
               ),
 
               _buildMenuItem(
                 icon: Icons.payment_outlined,
-                title: 'My Payment Options',
-                onTap: () {},
+                title: 'Mes options de paiement',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'Options de paiement',
+                      'Carte de crédit: **** 1234\n'
+                          'PayPal: luffy@strawhat.com\n'
+                          'Apple Pay: Activé\n'
+                          'Google Pay: Activé\n'
+                          'Trésor de pirate: 500M Berry');
+                },
               ),
 
               _buildMenuItem(
                 icon: Icons.notifications_outlined,
-                title: 'Notifications Preferences',
-                onTap: () {},
+                title: 'Préférences de notifications',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'Notifications',
+                      'Nouvelles commandes: Activées\n'
+                          'Promotions: Activées\n'
+                          'Alertes sécurité: Activées\n'
+                          'Newsletter: Activée\n'
+                          'Avis Marine: Désactivées');
+                },
               ),
 
               _buildMenuItem(
                 icon: Icons.account_balance_wallet_outlined,
-                title: 'Account Limits',
-                onTap: () {},
+                title: 'Limites du compte',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'Limites du compte',
+                      'Limite quotidienne: 10,000€\n'
+                          'Limite mensuelle: 50,000€\n'
+                          'Statut: Compte Premium\n'
+                          'Niveau de confiance: Yonko\n'
+                          'Privilèges spéciaux: Accès Grand Line');
+                },
               ),
 
               const SizedBox(height: 30),
 
               // Others Section
-              _buildSectionTitle('OTHERS'),
+              _buildSectionTitle('AUTRES'),
               const SizedBox(height: 16),
 
               _buildMenuItem(
                 icon: Icons.help_outline,
-                title: 'FAQ and Support',
-                onTap: () {},
+                title: 'FAQ et Support',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'FAQ et Support',
+                      'Q: Comment devenir Roi des Pirates?\n'
+                          'R: Trouve le One Piece!\n\n'
+                          'Q: Livraison vers Grand Line?\n'
+                          'R: Oui, même vers Raftel!\n\n'
+                          'Q: Acceptez-vous les Berry?\n'
+                          'R: Bien sûr, capitaine!\n\n'
+                          'Support: 24h/24, 7j/7');
+                },
               ),
 
               _buildMenuItem(
                 icon: Icons.book_outlined,
-                title: 'Our Handbook',
-                onTap: () {},
+                title: 'Guide',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'Guide',
+                      '📖 Règles de base:\n'
+                          '• Protège tes amis\n'
+                          '• Respecte les autres\n'
+                          '• Poursuis tes rêves\n'
+                          '• Partage tes réussites\n\n'
+                          '✨ Code d\'honneur:\n'
+                          '• Sois toujours honnête\n'
+                          '• L\'aventure avant tout');
+                },
               ),
 
               const SizedBox(height: 30),
@@ -183,7 +243,7 @@ class ProfilePage extends ConsumerWidget {
                     ),
                   ),
                   title: const Text(
-                    'Log Out',
+                    'Déconnexion',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Colors.red,
@@ -199,16 +259,23 @@ class ProfilePage extends ConsumerWidget {
                       builder: (ctx) => AlertDialog(
                         title: const Text('Déconnexion'),
                         content: const Text(
-                            'Êtes-vous sûr de vouloir vous déconnecter ?'),
+                            'Es-tu sûr de vouloir abandonner l\'aventure, capitaine ?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
                             child: const Text('Annuler'),
                           ),
                           ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               Navigator.pop(ctx);
-                              ref.read(authServiceProvider).signOut();
+                              await ref.read(authServiceProvider).signOut();
+                              if (context.mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginPage()),
+                                  (route) => false,
+                                );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
@@ -289,6 +356,31 @@ class ProfilePage extends ConsumerWidget {
           color: Colors.grey,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+
+  static void _showInfoDialog(
+      BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(
+            content,
+            style: const TextStyle(fontSize: 14, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Fermer',
+              style: TextStyle(color: Colors.green),
+            ),
+          ),
+        ],
       ),
     );
   }
