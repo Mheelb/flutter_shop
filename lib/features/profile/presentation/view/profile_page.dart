@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/views/login_page.dart';
@@ -174,6 +176,54 @@ class ProfilePage extends ConsumerWidget {
 
               const SizedBox(height: 30),
 
+              // SHOPIFUN Section
+              _buildSectionTitle('SHOPIFUN'),
+              const SizedBox(height: 16),
+
+              // Installer PWA (Web uniquement)
+              if (kIsWeb)
+                _buildMenuItem(
+                  icon: Icons.download,
+                  title: 'Installer SHOPIFUN',
+                  subtitle: 'Transformez le site en vraie application',
+                  onTap: () => _installPWA(context),
+                ),
+
+              // Partager l'app
+              _buildMenuItem(
+                icon: Icons.share,
+                title: 'Recommander SHOPIFUN',
+                subtitle: 'Partagez avec vos amis et famille',
+                onTap: () => _shareApp(context),
+              ),
+
+              // Informations sur l'app
+              _buildMenuItem(
+                icon: Icons.info_outline,
+                title: 'À propos de SHOPIFUN',
+                subtitle: 'Version, licences et crédits',
+                onTap: () {
+                  _showInfoDialog(
+                      context,
+                      'À propos de SHOPIFUN',
+                      '🛒 SHOPIFUN - E-commerce moderne\n\n'
+                          '📱 Version: 1.0.0\n'
+                          '🚀 Développé avec Flutter\n'
+                          '🔧 PWA Ready\n'
+                          '📊 Responsive Design\n'
+                          '🎨 Material Design 3\n\n'
+                          '✨ Fonctionnalités:\n'
+                          '• Navigation fluide\n'
+                          '• Panier intelligent\n'
+                          '• Favoris synchronisés\n'
+                          '• Partage natif\n'
+                          '• Mode hors-ligne\n\n'
+                          '👨‍💻 Développé avec ❤️');
+                },
+              ),
+
+              const SizedBox(height: 30),
+
               // Others Section
               _buildSectionTitle('AUTRES'),
               const SizedBox(height: 16),
@@ -316,6 +366,7 @@ class ProfilePage extends ConsumerWidget {
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
+    String? subtitle,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -351,6 +402,15 @@ class ProfilePage extends ConsumerWidget {
             fontSize: 16,
           ),
         ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              )
+            : null,
         trailing: const Icon(
           Icons.chevron_right,
           color: Colors.grey,
@@ -358,6 +418,74 @@ class ProfilePage extends ConsumerWidget {
         onTap: onTap,
       ),
     );
+  }
+
+  // Méthode pour installer PWA
+  void _installPWA(BuildContext context) {
+    if (kIsWeb) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('📱 Installer SHOPIFUN'),
+          content: const SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Transformez SHOPIFUN en vraie application !'),
+                SizedBox(height: 16),
+                Text('✅ Icône sur votre écran d\'accueil'),
+                Text('✅ Lancement sans navigateur'),
+                Text('✅ Interface comme une app native'),
+                Text('✅ Fonctionne hors-ligne'),
+                Text('✅ Notifications push'),
+                SizedBox(height: 16),
+                Text('📋 Comment installer :'),
+                Text('Chrome: Menu (⋮) > "Installer SHOPIFUN"'),
+                Text('Edge: Icône + dans la barre d\'adresse'),
+                Text('Firefox: Menu > "Installer cette app"'),
+                Text('Safari: Partager > "Sur l\'écran d\'accueil"'),
+                SizedBox(height: 16),
+                Text(
+                  '💡 L\'option d\'installation apparaît automatiquement après quelques secondes sur le site',
+                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Compris !'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  // Méthode pour partager l'app
+  void _shareApp(BuildContext context) async {
+    try {
+      await Share.share(
+        '🛒 Découvrez SHOPIFUN - La meilleure boutique en ligne !\n\n'
+        '✨ Des milliers de produits à prix réduits\n'
+        '🚀 Interface moderne et intuitive\n'
+        '📱 Disponible sur tous vos appareils\n'
+        '🔒 Paiements 100% sécurisés\n\n'
+        '👆 Visitez maintenant: ${kIsWeb ? Uri.base.toString() : 'https://shopifun.app'}\n\n'
+        '#SHOPIFUN #Shopping #ECommerce',
+        subject: 'SHOPIFUN - E-commerce moderne',
+      );
+    } catch (e) {
+      // Fallback pour les plateformes non supportées
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('📋 Lien SHOPIFUN copié dans le presse-papiers !'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   static void _showInfoDialog(

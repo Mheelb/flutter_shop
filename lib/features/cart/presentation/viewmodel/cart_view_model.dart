@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../cart/domain/models/cart.dart';
 import '../../../cart/domain/repositories/cart_repository.dart';
-import '../../../products/domain/models/product.dart';
 import '../../../products/domain/repositories/products_repository.dart';
 import 'cart_state.dart';
 
@@ -18,7 +17,8 @@ class CartViewModel extends StateNotifier<CartState> {
     final existing = [...state.items];
     final idx = existing.indexWhere((e) => e.productId == productId);
     if (idx >= 0) {
-      existing[idx] = existing[idx].copyWith(quantity: existing[idx].quantity + 1);
+      existing[idx] =
+          existing[idx].copyWith(quantity: existing[idx].quantity + 1);
     } else {
       existing.add(CartItem(productId: productId, quantity: 1));
     }
@@ -35,7 +35,8 @@ class CartViewModel extends StateNotifier<CartState> {
   }
 
   Future<void> removeProduct(int productId) async {
-    final existing = state.items.where((e) => e.productId != productId).toList();
+    final existing =
+        state.items.where((e) => e.productId != productId).toList();
     state = state.copyWith(items: existing);
     await _syncToServer();
   }
@@ -78,5 +79,3 @@ class CartViewModel extends StateNotifier<CartState> {
     }
   }
 }
-
-

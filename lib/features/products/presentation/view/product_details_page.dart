@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:io' show Platform;
 
 import '../providers/product_details_providers.dart';
 import '../../domain/models/product.dart';
