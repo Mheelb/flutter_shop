@@ -34,4 +34,102 @@ class DateFormatter {
         date1.month == date2.month &&
         date1.day == date2.day;
   }
+
+  static String formatTime(DateTime date) {
+    return '${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}:'
+        '${date.second.toString().padLeft(2, '0')}';
+  }
+
+  static String formatRelativeTime(DateTime date) {
+    return formatTimeAgo(date);
+  }
+
+  static String formatWithPattern(DateTime date, String pattern) {
+    // Simple pattern matching for common cases
+    switch (pattern) {
+      case 'yyyy-MM-dd':
+        return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      case 'dd/MM/yyyy':
+        return formatDate(date);
+      case 'MM/dd/yyyy':
+        return '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
+      case 'yyyy':
+        return date.year.toString();
+      case 'MM':
+        return date.month.toString().padLeft(2, '0');
+      case 'dd':
+        return date.day.toString().padLeft(2, '0');
+      case 'HH':
+        return date.hour.toString().padLeft(2, '0');
+      case 'mm':
+        return date.minute.toString().padLeft(2, '0');
+      case 'ss':
+        return date.second.toString().padLeft(2, '0');
+      default:
+        return formatDateTime(date);
+    }
+  }
+
+  static DateTime parseDate(String dateString) {
+    try {
+      // Try different formats
+      if (dateString.contains('-')) {
+        return DateTime.parse(dateString);
+      } else if (dateString.contains('/')) {
+        final parts = dateString.split('/');
+        if (parts.length == 3) {
+          // Try dd/MM/yyyy format
+          final day = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final year = int.parse(parts[2]);
+          return DateTime(year, month, day);
+        }
+      }
+      throw const FormatException('Unknown date format');
+    } catch (e) {
+      throw FormatException('Invalid date: $dateString');
+    }
+  }
+
+  static DateTime parseDateTime(String dateTimeString) {
+    return DateTime.parse(dateTimeString);
+  }
+
+  static bool isValidDate(String dateString) {
+    try {
+      parseDate(dateString);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static bool isWeekend(DateTime date) {
+    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+  }
+
+  static bool isLeapYear(int year) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+  }
+
+  static DateTime addDays(DateTime date, int days) {
+    return date.add(Duration(days: days));
+  }
+
+  static DateTime subtractDays(DateTime date, int days) {
+    return date.subtract(Duration(days: days));
+  }
+
+  static int daysBetween(DateTime date1, DateTime date2) {
+    return date2.difference(date1).inDays;
+  }
+
+  static DateTime startOfDay(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  static DateTime endOfDay(DateTime date) {
+    return DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+  }
 }

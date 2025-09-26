@@ -7,19 +7,17 @@ import 'package:flutter_shop/features/products/domain/models/product.dart';
 class MockProductsRepository {
   final bool shouldFail;
   final List<Product> mockProducts;
-
-  MockProductsRepository(
-      {this.shouldFail = false, this.mockProducts = const []});
-
+  
+  MockProductsRepository({this.shouldFail = false, this.mockProducts = const []});
+  
   Future<List<Product>> fetchAllProducts() async {
-    await Future.delayed(
-        const Duration(milliseconds: 10)); // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 10)); // Simulate network delay
     if (shouldFail) {
       throw Exception('Network error');
     }
     return mockProducts;
   }
-
+  
   Future<Product> fetchProduct(int id) async {
     if (shouldFail) {
       throw Exception('Product not found');
@@ -32,7 +30,7 @@ void main() {
   group('ProductsViewModel Tests', () {
     late ProductsViewModel viewModel;
     late MockProductsRepository mockRepository;
-
+    
     const testProducts = [
       Product(
         id: 1,
@@ -71,11 +69,11 @@ void main() {
     test('should set loading state when load is called', () async {
       // Act
       final loadFuture = viewModel.load();
-
+      
       // Assert - should be loading initially
       expect(viewModel.state.isLoading, true);
       expect(viewModel.state.errorMessage, isNull);
-
+      
       // Wait for completion
       await loadFuture;
     });
@@ -83,7 +81,7 @@ void main() {
     test('should load products successfully', () async {
       // Act
       await viewModel.load();
-
+      
       // Assert
       expect(viewModel.state.isLoading, false);
       expect(viewModel.state.products.length, 2);
@@ -96,10 +94,10 @@ void main() {
       // Arrange
       mockRepository = MockProductsRepository(shouldFail: true);
       viewModel = ProductsViewModel(mockRepository as dynamic);
-
+      
       // Act
       await viewModel.load();
-
+      
       // Assert
       expect(viewModel.state.isLoading, false);
       expect(viewModel.state.products, isEmpty);
@@ -109,7 +107,7 @@ void main() {
     test('should update query correctly', () {
       // Act
       viewModel.setQuery('iPhone');
-
+      
       // Assert
       expect(viewModel.state.query, 'iPhone');
     });
@@ -119,10 +117,10 @@ void main() {
       viewModel = ProductsViewModel(mockRepository as dynamic);
       // Manually set products for testing filtering
       const state = ProductsState(products: testProducts, query: 'iPhone');
-
+      
       // Act
       final filtered = state.filteredProducts;
-
+      
       // Assert
       expect(filtered.length, 1);
       expect(filtered[0].title, 'iPhone 15');
@@ -131,10 +129,10 @@ void main() {
     test('should return all products when query is empty', () {
       // Arrange
       const state = ProductsState(products: testProducts, query: '');
-
+      
       // Act
       final filtered = state.filteredProducts;
-
+      
       // Assert
       expect(filtered.length, 2);
     });
@@ -142,7 +140,7 @@ void main() {
     test('copyWith should work with all parameters', () {
       // Arrange
       const originalState = ProductsState();
-
+      
       // Act
       final newState = originalState.copyWith(
         isLoading: true,
@@ -150,7 +148,7 @@ void main() {
         products: testProducts,
         query: 'test query',
       );
-
+      
       // Assert
       expect(newState.isLoading, true);
       expect(newState.errorMessage, 'Test error');
@@ -166,15 +164,15 @@ void main() {
         products: testProducts,
         query: 'original query',
       );
-
+      
       // Act
       final newState = originalState.copyWith(
         isLoading: false,
         // errorMessage not provided - should be preserved
-        // products not provided - should be preserved
+        // products not provided - should be preserved  
         // query not provided - should be preserved
       );
-
+      
       // Assert
       expect(newState.isLoading, false);
       expect(newState.errorMessage, 'Original error'); // Preserved
