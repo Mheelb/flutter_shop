@@ -9,5 +9,3 @@ final productDetailsViewModelProvider = StateNotifierProvider.autoDispose<
   final repo = ref.read(productsRepositoryProvider);
   return ProductDetailsViewModel(repo);
 });
-
-

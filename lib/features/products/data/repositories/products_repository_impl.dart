@@ -18,5 +18,3 @@ class ProductsRepositoryImpl implements ProductsRepository {
     return remoteDataSource.fetchProduct(id);
   }
 }
-
-

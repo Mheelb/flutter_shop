@@ -6,7 +6,8 @@ import 'product_details_state.dart';
 class ProductDetailsViewModel extends StateNotifier<ProductDetailsState> {
   final ProductsRepository _repository;
 
-  ProductDetailsViewModel(this._repository) : super(const ProductDetailsState());
+  ProductDetailsViewModel(this._repository)
+      : super(const ProductDetailsState());
 
   Future<void> load(int id) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -20,5 +21,3 @@ class ProductDetailsViewModel extends StateNotifier<ProductDetailsState> {
     }
   }
 }
-
-

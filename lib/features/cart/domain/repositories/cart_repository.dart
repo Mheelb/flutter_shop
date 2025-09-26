@@ -6,5 +6,3 @@ abstract class CartRepository {
   Future<Cart> updateCart(int cartId, int userId, List<CartItem> items);
   Future<void> deleteCart(int cartId);
 }
-
-

@@ -28,10 +28,10 @@ class Product {
       imageUrl: (json['image'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
       category: (json['category'] ?? '').toString(),
-      rating: (rating != null ? (rating['rate'] as num?)?.toDouble() : null) ?? 0.0,
-      ratingCount: (rating != null ? (rating['count'] as num?)?.toInt() : null) ?? 0,
+      rating:
+          (rating != null ? (rating['rate'] as num?)?.toDouble() : null) ?? 0.0,
+      ratingCount:
+          (rating != null ? (rating['count'] as num?)?.toInt() : null) ?? 0,
     );
   }
 }
-
-

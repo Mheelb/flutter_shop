@@ -15,5 +15,3 @@ class Order {
     required this.createdAt,
   });
 }
-
-

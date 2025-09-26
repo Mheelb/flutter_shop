@@ -10,10 +10,9 @@ final cartRepositoryProvider = Provider<CartRepository>((ref) {
   return CartRepositoryImpl();
 });
 
-final cartViewModelProvider = StateNotifierProvider<CartViewModel, CartState>((ref) {
+final cartViewModelProvider =
+    StateNotifierProvider<CartViewModel, CartState>((ref) {
   final cartRepo = ref.read(cartRepositoryProvider);
   final productsRepo = ref.read(productsRepositoryProvider);
   return CartViewModel(cartRepo, productsRepo);
 });
-
-

@@ -8,13 +8,15 @@ class CartRemoteDataSource {
   final http.Client httpClient;
   final String baseUrl;
 
-  CartRemoteDataSource({http.Client? httpClient, this.baseUrl = 'https://fakestoreapi.com'})
+  CartRemoteDataSource(
+      {http.Client? httpClient, this.baseUrl = 'https://fakestoreapi.com'})
       : httpClient = httpClient ?? http.Client();
 
   Future<List<Cart>> fetchCarts() async {
     final uri = Uri.parse('$baseUrl/carts');
     final res = await httpClient.get(uri);
-    if (res.statusCode != 200) throw Exception('Failed to fetch carts (${res.statusCode})');
+    if (res.statusCode != 200)
+      throw Exception('Failed to fetch carts (${res.statusCode})');
     final List<dynamic> list = json.decode(res.body) as List<dynamic>;
     return list.map((e) => Cart.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -57,15 +59,15 @@ class CartRemoteDataSource {
       headers: {'Content-Type': 'application/json'},
       body: body,
     );
-    if (res.statusCode != 200) throw Exception('Failed to update cart (${res.statusCode})');
+    if (res.statusCode != 200)
+      throw Exception('Failed to update cart (${res.statusCode})');
     return Cart.fromJson(json.decode(res.body) as Map<String, dynamic>);
   }
 
   Future<void> deleteCart(int cartId) async {
     final uri = Uri.parse('$baseUrl/carts/$cartId');
     final res = await httpClient.delete(uri);
-    if (res.statusCode != 200) throw Exception('Failed to delete cart (${res.statusCode})');
+    if (res.statusCode != 200)
+      throw Exception('Failed to delete cart (${res.statusCode})');
   }
 }
-
-

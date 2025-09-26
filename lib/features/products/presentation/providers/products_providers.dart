@@ -14,5 +14,3 @@ final productsViewModelProvider =
   final repo = ref.read(productsRepositoryProvider);
   return ProductsViewModel(repo);
 });
-
-

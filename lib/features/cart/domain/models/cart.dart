@@ -31,10 +31,12 @@ class Cart {
   Map<String, dynamic> toJson() => {
         'id': id,
         'userId': userId,
-        'products': items.map((e) => {
-              'productId': e.productId,
-              'quantity': e.quantity,
-            }).toList(),
+        'products': items
+            .map((e) => {
+                  'productId': e.productId,
+                  'quantity': e.quantity,
+                })
+            .toList(),
       };
 
   factory Cart.fromJson(Map<String, dynamic> json) {
@@ -48,5 +50,3 @@ class Cart {
     );
   }
 }
-
-

@@ -32,7 +32,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
             child: SizedBox(
               height: 44,
               child: TextField(
-                onChanged: ref.read(productsViewModelProvider.notifier).setQuery,
+                onChanged:
+                    ref.read(productsViewModelProvider.notifier).setQuery,
                 decoration: const InputDecoration(
                   hintText: 'Rechercher un produit...',
                   prefixIcon: Icon(Icons.search),
@@ -53,12 +54,16 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                          const Icon(Icons.error_outline,
+                              size: 64, color: Colors.red),
                           const SizedBox(height: 12),
-                          Text(state.errorMessage!, textAlign: TextAlign.center),
+                          Text(state.errorMessage!,
+                              textAlign: TextAlign.center),
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
-                            onPressed: () => ref.read(productsViewModelProvider.notifier).load(),
+                            onPressed: () => ref
+                                .read(productsViewModelProvider.notifier)
+                                .load(),
                             icon: const Icon(Icons.refresh),
                             label: const Text('Réessayer'),
                           )
@@ -82,7 +87,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                         }
                         return GridView.builder(
                           padding: const EdgeInsets.all(12),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxis,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
@@ -92,69 +98,77 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                           itemBuilder: (context, index) {
                             final p = state.filteredProducts[index];
                             return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ProductDetailsPage(
-                                  productId: p.id,
-                                  initialProduct: p,
-                                ),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            );
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: Hero(
-                                  tag: 'product-${p.id}',
-                                  child: Image.network(
-                                    p.imageUrl,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
+                              clipBehavior: Clip.antiAlias,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ProductDetailsPage(
+                                        productId: p.id,
+                                        initialProduct: p,
+                                      ),
+                                    ),
+                                  );
+                                },
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    Text(
-                                      p.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    Expanded(
+                                      child: Hero(
+                                        tag: 'product-${p.id}',
+                                        child: Image.network(
+                                          p.imageUrl,
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                                        const SizedBox(width: 4),
-                                        Text('${p.rating} (${p.ratingCount})'),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '${p.price.toStringAsFixed(2)} €',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.primary,
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            p.title,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.star,
+                                                  color: Colors.amber,
+                                                  size: 16),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                  '${p.rating} (${p.ratingCount})'),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            '${p.price.toStringAsFixed(2)} €',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
+                            );
                           },
                         );
                       },
@@ -164,5 +178,3 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     );
   }
 }
-
-

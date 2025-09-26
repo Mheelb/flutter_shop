@@ -24,5 +24,3 @@ class ProductsViewModel extends StateNotifier<ProductsState> {
     state = state.copyWith(query: query);
   }
 }
-
-
