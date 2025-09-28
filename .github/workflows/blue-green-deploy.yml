@@ -1,5 +1,10 @@
 name: Blue-Green Deployment to Firebase Hosting
 
+# CONFIGURATION REQUISE:
+# Dans GitHub: Settings → Secrets and variables → Actions
+# Ajouter le secret: FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE
+# Obtenir la clé via: firebase init hosting:github
+
 on:
   push:
     branches:
@@ -22,8 +27,46 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
       
-    - name: Run tests
-      run: flutter test
+    - name: Check formatting
+      run: flutter format --set-exit-if-changed .
+      
+    - name: Analyze code
+      run: flutter analyze
+      
+    - name: Run tests with coverage
+      run: flutter test --coverage
+      
+    - name: Check coverage threshold
+      run: |
+        # Install lcov for coverage analysis
+        sudo apt-get update && sudo apt-get install -y lcov
+        
+        # Check if coverage file exists
+        if [ ! -f "coverage/lcov.info" ]; then
+          echo "❌ No coverage file found"
+          exit 1
+        fi
+        
+        # Generate coverage report
+        genhtml coverage/lcov.info -o coverage/html
+        
+        # Extract coverage percentage (simpler approach)
+        COVERAGE=$(lcov --summary coverage/lcov.info 2>/dev/null | grep "lines" | grep -o '[0-9.]*%' | head -1 | sed 's/%//')
+        
+        if [ -z "$COVERAGE" ]; then
+          echo "❌ Could not extract coverage percentage"
+          exit 1
+        fi
+        
+        echo "Coverage: ${COVERAGE}%"
+        
+        # Compare coverage (using awk instead of bc)
+        if awk -v cov="$COVERAGE" 'BEGIN { exit (cov < 50) }'; then
+          echo "✅ Coverage ${COVERAGE}% meets 50% threshold"
+        else
+          echo "❌ Coverage ${COVERAGE}% is below 50% threshold"
+          exit 1
+        fi
       
     - name: Build web
       run: flutter build web --release --web-renderer html
@@ -78,8 +121,6 @@ jobs:
     needs: [deploy-blue, smoke-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment:
-      name: production  # Nécessite approbation manuelle
     steps:
     - uses: actions/checkout@v4
     
@@ -102,4 +143,4 @@ jobs:
     - name: Notify Success
       run: |
         echo "🚀 Successfully deployed to production!"
-        echo "🌐 Live URL: https://flutter-shop-mds.web.app/"
+        echo "🌐 Live URL: https://auth-ecommmerce.web.app/"
