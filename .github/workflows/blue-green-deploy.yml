@@ -78,7 +78,8 @@ jobs:
     needs: [deploy-blue, smoke-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: production  # Nécessite approbation manuelle
+    environment:
+      name: production  # Nécessite approbation manuelle
     steps:
     - uses: actions/checkout@v4
     
