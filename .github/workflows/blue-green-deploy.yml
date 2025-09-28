@@ -2,8 +2,9 @@ name: Blue-Green Deployment to Firebase Hosting
 
 # CONFIGURATION REQUISE:
 # Dans GitHub: Settings → Secrets and variables → Actions
-# Ajouter le secret: FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE
-# Obtenir la clé via: firebase init hosting:github
+# Ajouter le secret: FIREBASE_SERVICE_ACCOUNT
+# Obtenir via: firebase init hosting:github
+# Note: Les avertissements VS Code sur les secrets sont normaux
 
 on:
   push:
@@ -96,8 +97,8 @@ jobs:
       id: deploy
       uses: FirebaseExtended/action-hosting-deploy@v0
       with:
-        repoToken: ${{ secrets.GITHUB_TOKEN }}
-        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE }}
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
         channelId: blue
         projectId: auth-ecommmerce
         expires: 30d
@@ -133,8 +134,8 @@ jobs:
     - name: Deploy to Green (Live Channel)
       uses: FirebaseExtended/action-hosting-deploy@v0
       with:
-        repoToken: ${{ secrets.GITHUB_TOKEN }}
-        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE }}
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
         channelId: live
         projectId: auth-ecommmerce
       env:
