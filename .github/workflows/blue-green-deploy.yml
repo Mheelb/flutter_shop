@@ -1,0 +1,104 @@
+name: Blue-Green Deployment to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+      - features/product
+
+jobs:
+  # Étape 1: Build et tests
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Run tests
+      run: flutter test
+      
+    - name: Build web
+      run: flutter build web --release --web-renderer html
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: web-build
+        path: build/web
+
+  # Étape 2: Déploiement Blue (Preview)
+  deploy-blue:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.details_url }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: web-build
+        path: build/web
+        
+    - name: Deploy to Blue (Preview Channel)
+      id: deploy
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: ${{ secrets.GITHUB_TOKEN }}
+        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE }}
+        channelId: blue
+        projectId: auth-ecommmerce
+        expires: 30d
+      env:
+        FIREBASE_CLI_EXPERIMENTS: webframeworks
+
+  # Étape 3: Smoke Tests sur Blue
+  smoke-tests:
+    needs: deploy-blue
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Smoke Tests
+      run: |
+        echo "🧪 Running smoke tests on: ${{ needs.deploy-blue.outputs.preview-url }}"
+        # Ajouter vos tests d'intégration ici
+        curl -f ${{ needs.deploy-blue.outputs.preview-url }} || exit 1
+        echo "✅ Smoke tests passed!"
+
+  # Étape 4: Promotion vers Green (Live) - Manuel pour sécurité
+  promote-to-green:
+    needs: [deploy-blue, smoke-tests]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production  # Nécessite approbation manuelle
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: web-build
+        path: build/web
+        
+    - name: Deploy to Green (Live Channel)
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: ${{ secrets.GITHUB_TOKEN }}
+        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AUTH_ECOMMMERCE }}
+        channelId: live
+        projectId: auth-ecommmerce
+      env:
+        FIREBASE_CLI_EXPERIMENTS: webframeworks
+        
+    - name: Notify Success
+      run: |
+        echo "🚀 Successfully deployed to production!"
+        echo "🌐 Live URL: https://flutter-shop-mds.web.app/"

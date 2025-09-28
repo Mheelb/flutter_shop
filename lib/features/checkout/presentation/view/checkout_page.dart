@@ -19,10 +19,71 @@ class CheckoutPage extends ConsumerStatefulWidget {
 
 class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   String selectedPaymentMethod = '';
+  bool isLoadingProducts = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Charger les produits manquants si nécessaire
+    if (widget.fromCart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadMissingProducts();
+      });
+    }
+  }
+
+  Future<void> _loadMissingProducts() async {
+    setState(() {
+      isLoadingProducts = true;
+    });
+
+    try {
+      final cartState = ref.read(cartViewModelProvider);
+      final cartNotifier = ref.read(cartViewModelProvider.notifier);
+
+      print('🛒 CHECKOUT DEBUG: Items in cart: ${cartState.items.length}');
+      print(
+          '🛒 CHECKOUT DEBUG: Products in index: ${cartState.productsIndex.length}');
+      print('🛒 CHECKOUT DEBUG: Cart state total: ${cartState.total}');
+
+      for (var item in cartState.items) {
+        print(
+            '🛒 CHECKOUT DEBUG: Checking product ${item.productId}, quantity: ${item.quantity}');
+        if (!cartState.productsIndex.containsKey(item.productId)) {
+          print('🛒 CHECKOUT DEBUG: Loading missing product ${item.productId}');
+          // Force le chargement du produit manquant
+          await cartNotifier.addProduct(item.productId);
+          await cartNotifier.changeQuantity(item.productId, item.quantity);
+        }
+      }
+
+      // Attendre un peu pour que le state se mette à jour
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      final updatedCartState = ref.read(cartViewModelProvider);
+      print(
+          '🛒 CHECKOUT DEBUG: After loading - total: ${updatedCartState.total}');
+      print(
+          '🛒 CHECKOUT DEBUG: After loading - products in index: ${updatedCartState.productsIndex.length}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoadingProducts = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartViewModelProvider);
+
+    // Debug prints
+    print('🎯 BUILD DEBUG: Cart state total: ${cartState.total}');
+    print(
+        '🎯 BUILD DEBUG: Products in index: ${cartState.productsIndex.keys.toList()}');
+    print(
+        '🎯 BUILD DEBUG: Cart items: ${cartState.items.map((e) => '${e.productId}:${e.quantity}').toList()}');
 
     // Calculer les produits à afficher
     List<Widget> productWidgets = [];
@@ -33,14 +94,44 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       total = widget.singleProduct!.price;
       productWidgets.add(_buildProductItem(widget.singleProduct!, 1));
     } else if (widget.fromCart) {
-      // Achat depuis le panier
+      // Achat depuis le panier - utiliser le total du state
+      total = cartState.total;
+      print('🎯 BUILD DEBUG: Using cart total: $total');
+
       for (var item in cartState.items) {
         final product = cartState.productsIndex[item.productId];
         if (product != null) {
-          total += product.price * item.quantity;
           productWidgets.add(_buildProductItem(product, item.quantity));
+        } else {
+          print('🎯 BUILD DEBUG: Product ${item.productId} not found in index');
         }
       }
+    }
+
+    // Si on est en train de charger les produits, afficher un loading
+    if (isLoadingProducts && widget.fromCart) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+          ),
+          title: const Text(
+            'Commande',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
     return Scaffold(
