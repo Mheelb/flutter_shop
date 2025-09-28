@@ -1,722 +1,694 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
-import '../../movies/presentation/providers/movies_providers.dart';
-import '../../movies/presentation/views/movies_page.dart';
-import '../../movies/domain/models/movie.dart';
+import '../../products/presentation/providers/products_providers.dart';
+import '../../products/presentation/view/product_details_page.dart';
+import '../../cart/presentation/view/cart_page.dart';
+import '../../cart/presentation/providers/cart_providers.dart';
+import '../../profile/presentation/view/profile_page.dart';
+import '../../favorites/presentation/providers/favorites_providers.dart';
+import '../../favorites/presentation/view/favorites_page.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0F14), // Letterboxd dark background
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF14181C),
-        elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00AC1C), // Letterboxd green
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Icon(
-                Icons.movie,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'CinéBox',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const MoviesPage(),
-                ),
-              );
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.account_circle, color: Colors.white),
-            color: const Color(0xFF2C3440),
-            onSelected: (value) {
-              if (value == 'logout') {
-                ref.read(authServiceProvider).signOut();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: const [
-                    Icon(Icons.logout, color: Colors.white70),
-                    SizedBox(width: 12),
-                    Text('Déconnexion', style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: authState.when(
-        data: (user) => const _HomeContent(),
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00AC1C)),
-          ),
-        ),
-        error: (error, stack) => Center(
-          child: Text(
-            'Erreur: $error',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomeContent extends ConsumerWidget {
-  const _HomeContent();
-
+class _HomePageState extends ConsumerState<HomePage> {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Hero section with featured movie
-          _buildHeroSection(ref),
-          
-          const SizedBox(height: 32),
-          
-          // Popular movies section
-          _buildMovieSection(
-            title: 'Films populaires',
-            subtitle: 'Les plus regardés en ce moment',
-            moviesProvider: popularMoviesProvider,
-            ref: ref,
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Top rated movies section
-          _buildMovieSection(
-            title: 'Mieux notés',
-            subtitle: 'Les chefs-d\'œuvre du cinéma',
-            moviesProvider: topRatedMoviesProvider,
-            ref: ref,
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Now playing movies section
-          _buildMovieSection(
-            title: 'Dernières sorties',
-            subtitle: 'Nouveautés au cinéma',
-            moviesProvider: nowPlayingMoviesProvider,
-            ref: ref,
-          ),
-          
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(productsViewModelProvider.notifier).load());
+  } // Méthode responsive pour déterminer le nombre de colonnes
+
+  int _getCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (kIsWeb) {
+      if (width >= 1200) return 5; // Desktop large
+      if (width >= 900) return 4; // Desktop
+      if (width >= 600) return 3; // Tablet
+      return 2; // Mobile
+    }
+    return 2; // Mobile par défaut
   }
-
-  Widget _buildHeroSection(WidgetRef ref) {
-    final popularMovies = ref.watch(popularMoviesProvider);
-    
-    return popularMovies.when(
-      data: (movies) {
-        if (movies.isEmpty) return const SizedBox.shrink();
-        
-        final featuredMovie = movies.first;
-        return Container(
-          height: 300,
-          width: double.infinity,
-          child: Stack(
-            children: [
-              // Background image
-              if (featuredMovie.fullBackdropUrl.isNotEmpty)
-                Positioned.fill(
-                  child: CachedNetworkImage(
-                    imageUrl: featuredMovie.fullBackdropUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: const Color(0xFF2C3440),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: const Color(0xFF2C3440),
-                    ),
-                  ),
-                ),
-              
-              // Gradient overlay
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        const Color(0xFF0D0F14).withOpacity(0.7),
-                        const Color(0xFF0D0F14),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Movie info
-              Positioned(
-                bottom: 24,
-                left: 24,
-                right: 24,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00AC1C),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'TENDANCE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      featuredMovie.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: Color(0xFFFFD700),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          featuredMovie.formattedRating,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          featuredMovie.releaseYear,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => Container(
-        height: 300,
-        width: double.infinity,
-        color: const Color(0xFF2C3440),
-        child: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00AC1C)),
-          ),
-        ),
-      ),
-      error: (error, stack) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildMovieSection({
-    required String title,
-    required String subtitle,
-    required FutureProvider<List<Movie>> moviesProvider,
-    required WidgetRef ref,
-  }) {
-    final movies = ref.watch(moviesProvider);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: Colors.white60,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        movies.when(
-          data: (moviesList) => SizedBox(
-            height: 280,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: moviesList.length > 10 ? 10 : moviesList.length,
-              itemBuilder: (context, index) {
-                final movie = moviesList[index];
-                return _buildMovieCard(movie, context);
-              },
-            ),
-          ),
-          loading: () => SizedBox(
-            height: 280,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: 5,
-              itemBuilder: (context, index) => _buildShimmerCard(),
-            ),
-          ),
-          error: (error, stack) => Container(
-            height: 280,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Center(
-              child: Text(
-                'Erreur de chargement',
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMovieCard(Movie movie, BuildContext context) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Movie poster
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _showMovieDetails(movie, context),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: movie.fullPosterUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: movie.fullPosterUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: const Color(0xFF2C3440),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF00AC1C),
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: const Color(0xFF2C3440),
-                            child: const Icon(
-                              Icons.movie_outlined,
-                              color: Colors.white30,
-                              size: 40,
-                            ),
-                          ),
-                        )
-                      : Container(
-                          color: const Color(0xFF2C3440),
-                          child: const Icon(
-                            Icons.movie_outlined,
-                            color: Colors.white30,
-                            size: 40,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // Movie title
-          Text(
-            movie.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          
-          const SizedBox(height: 4),
-          
-          // Rating and year
-          Row(
-            children: [
-              const Icon(
-                Icons.star,
-                color: Color(0xFFFFD700),
-                size: 12,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                movie.formattedRating,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                movie.releaseYear,
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShimmerCard() {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C3440),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 14,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C3440),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            height: 12,
-            width: 80,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C3440),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMovieDetails(Movie movie, BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _MovieDetailsSheet(movie: movie),
-    );
-  }
-}
-
-class _MovieDetailsSheet extends StatelessWidget {
-  final Movie movie;
-
-  const _MovieDetailsSheet({required this.movie});
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    
-    return Container(
-      height: screenHeight * 0.8,
-      decoration: const BoxDecoration(
-        color: Color(0xFF14181C),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white30,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          width: 120,
-                          height: 180,
-                          child: movie.fullPosterUrl.isNotEmpty
-                              ? CachedNetworkImage(
-                                  imageUrl: movie.fullPosterUrl,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(
-                                    color: const Color(0xFF2C3440),
-                                    child: const Center(
-                                      child: CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF00AC1C),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) =>
-                                      Container(
-                                    color: const Color(0xFF2C3440),
-                                    child: const Icon(
-                                      Icons.movie_outlined,
-                                      size: 40,
-                                      color: Colors.white30,
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  color: const Color(0xFF2C3440),
-                                  child: const Icon(
-                                    Icons.movie_outlined,
-                                    size: 40,
-                                    color: Colors.white30,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              movie.title,
-                              style: const TextStyle(
-                                fontSize: 24,
+    final authState = ref.watch(authStateProvider);
+    final productsState = ref.watch(productsViewModelProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: authState.when(
+          data: (user) => Column(
+            children: [
+              // Header avec titre et panier
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'SHOPI',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.red,
+                                fontSize: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 600
+                                    ? 32
+                                    : 24,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            if (movie.title != movie.originalTitle)
-                              Text(
-                                movie.originalTitle,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white60,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                  color: Colors.white60,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  movie.releaseYear,
-                                  style: const TextStyle(
-                                    color: Colors.white60,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 20,
-                                  color: Color(0xFFFFD700),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${movie.formattedRating}/10',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '(${movie.voteCount} votes)',
-                                  style: const TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
                         ),
+                        Text(
+                          'FUN',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                                fontSize: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 600
+                                    ? 32
+                                    : 24,
+                              ),
+                        ),
+                      ],
+                    ),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final cartState = ref.watch(cartViewModelProvider);
+                        final itemCount = cartState.items.fold<int>(
+                          0,
+                          (sum, item) => sum + item.quantity,
+                        );
+
+                        return Stack(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) => const CartPage()),
+                                );
+                              },
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.shopping_cart_outlined,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ),
+                            if (itemCount > 0)
+                              Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white, width: 2),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                  ),
+                                  child: Text(
+                                    '$itemCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // Barre de recherche
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Synopsis',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  child: TextField(
+                    onChanged:
+                        ref.read(productsViewModelProvider.notifier).setQuery,
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    movie.overview.isNotEmpty
-                        ? movie.overview
-                        : 'Aucun synopsis disponible.',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  if (movie.fullBackdropUrl.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Image d\'arrière-plan',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: movie.fullBackdropUrl,
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          height: 200,
-                          color: const Color(0xFF2C3440),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF00AC1C),
-                              ),
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          height: 200,
-                          color: const Color(0xFF2C3440),
-                          child: const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 40,
-                              color: Colors.white30,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
+
+              const SizedBox(height: 20),
+
+              // Products Grid
+              Expanded(
+                child: productsState.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : productsState.errorMessage != null
+                        ? Center(child: Text(productsState.errorMessage!))
+                        : Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: GridView.builder(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: _getCrossAxisCount(context),
+                                childAspectRatio: kIsWeb &&
+                                        MediaQuery.of(context).size.width > 900
+                                    ? 0.8
+                                    : 0.75,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                              itemCount: productsState.filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final product =
+                                    productsState.filteredProducts[index];
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ProductDetailsPage(
+                                          productId: product.id,
+                                          initialProduct: product,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                top: Radius.circular(16),
+                                              ),
+                                            ),
+                                            child: Stack(
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      const BorderRadius
+                                                          .vertical(
+                                                    top: Radius.circular(16),
+                                                  ),
+                                                  child: Image.network(
+                                                    product.imageUrl,
+                                                    fit: BoxFit.contain,
+                                                    width: double.infinity,
+                                                    height: double.infinity,
+                                                  ),
+                                                ),
+                                                // Cœur de favoris en haut à droite
+                                                Positioned(
+                                                  top: 8,
+                                                  right: 8,
+                                                  child: Consumer(
+                                                    builder:
+                                                        (context, ref, child) {
+                                                      final isFavorite =
+                                                          ref.watch(
+                                                        favoritesProvider
+                                                            .select(
+                                                          (state) => state
+                                                              .favoriteIds
+                                                              .contains(
+                                                                  product.id),
+                                                        ),
+                                                      );
+
+                                                      return GestureDetector(
+                                                        onTap: () {
+                                                          ref
+                                                              .read(
+                                                                  favoritesProvider
+                                                                      .notifier)
+                                                              .toggleFavorite(
+                                                                  product.id);
+                                                        },
+                                                        child: Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(6),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                    0.9),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Colors
+                                                                    .black
+                                                                    .withOpacity(
+                                                                        0.1),
+                                                                blurRadius: 4,
+                                                                offset:
+                                                                    const Offset(
+                                                                        0, 2),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          child: Icon(
+                                                            isFavorite
+                                                                ? Icons.favorite
+                                                                : Icons
+                                                                    .favorite_border,
+                                                            color: isFavorite
+                                                                ? Colors.red
+                                                                : Colors
+                                                                    .grey[600],
+                                                            size: 16,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                product.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.star,
+                                                      color: Colors.amber,
+                                                      size: 16),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '${product.rating}',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '\$${product.price.toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+              ),
+            ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Erreur: $error')),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Home
+              _buildNavItem(
+                icon: Icons.home,
+                isSelected: true,
+                onTap: () {},
+              ),
+
+              // Cart
+              Consumer(
+                builder: (context, ref, child) {
+                  final cartState = ref.watch(cartViewModelProvider);
+                  final itemCount = cartState.items.fold<int>(
+                    0,
+                    (sum, item) => sum + item.quantity,
+                  );
+
+                  return _buildNavItemWithBadge(
+                    icon: Icons.shopping_cart_outlined,
+                    isSelected: false,
+                    badgeCount: itemCount,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CartPage()),
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // Favorites
+              Consumer(
+                builder: (context, ref, child) {
+                  final favoritesState = ref.watch(favoritesProvider);
+                  final hasFavorites = favoritesState.favoriteIds.isNotEmpty;
+
+                  return _buildNavItemWithNotification(
+                    icon: Icons.favorite_border,
+                    isSelected: false,
+                    hasNotification: hasFavorites,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const FavoritesPage()),
+                      );
+                    },
+                  );
+                },
+              ),
+
+              // Profile
+              _buildNavItem(
+                icon: Icons.person_outline,
+                isSelected: false,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+              ),
+
+              // Test des fonctionnalités (Debug uniquement)
+              if (kDebugMode)
+                _buildNavItem(
+                  icon: Icons.bug_report,
+                  isSelected: false,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const _PlatformTestPage()),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget pour les éléments du menu moderne
+  Widget _buildNavItem({
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.green : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? Colors.white : Colors.grey[600],
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithBadge({
+    required IconData icon,
+    required bool isSelected,
+    required int badgeCount,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.green : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey[600],
+              size: 24,
             ),
           ),
+          if (badgeCount > 0)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Widget _buildNavItemWithNotification({
+    required IconData icon,
+    required bool isSelected,
+    required bool hasNotification,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.green : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey[600],
+              size: 24,
+            ),
+          ),
+          if (hasNotification)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// Page de test simple intégrée
+class _PlatformTestPage extends StatelessWidget {
+  const _PlatformTestPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('🔧 Test des Fonctionnalités'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '🌐 Détection de Plateforme',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Web: ${kIsWeb ? '✅ Détecté' : '❌ Non détecté'}'),
+                    if (kIsWeb) const Text('✅ PWA et Partage Web disponibles'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '📱 Grille Responsive',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                        'Largeur écran: ${MediaQuery.of(context).size.width.toInt()}px'),
+                    Text('Colonnes: ${_getColumns(context)}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (kIsWeb)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.share, color: Colors.blue),
+                  title: const Text('Test Partage Web'),
+                  subtitle: const Text('Testez la Web Share API'),
+                  onTap: () async {
+                    try {
+                      await Share.share(
+                        'Test de partage depuis SHOPIFUN !',
+                        subject: 'SHOPIFUN Test',
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Partage testé avec succès !'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _getColumns(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (kIsWeb) {
+      if (width >= 1200) return 5;
+      if (width >= 900) return 4;
+      if (width >= 600) return 3;
+      return 2;
+    }
+    return 2;
   }
 }

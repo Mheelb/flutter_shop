@@ -1,3 +1,136 @@
-# flutter_shop
+# 🛒 SHOPIFUN - E-commerce Flutter PWA
 
-A new Flutter project.
+[![CI/CD](https://github.com/Mheelb/flutter_shop/workflows/CI/CD%20Flutter%20Web/badge.svg)](https://github.com/Mheelb/flutter_shop/actions)
+[![Firebase Deployment](https://img.shields.io/badge/deployed%20on-Firebase-orange)](https://auth-ecommmerce.web.app)
+[![Flutter](https://img.shields.io/badge/Flutter-3.24.3-blue)](https://flutter.dev/)
+[![Coverage](https://img.shields.io/badge/coverage-%3E50%25-green)](https://github.com/Mheelb/flutter_shop/actions)
+
+> 🚀 **Application e-commerce moderne** développée avec Flutter, déployée comme Progressive Web App sur Firebase Hosting.
+
+## 🌐 **Déploiement**
+
+- **🌟 Production :** [https://auth-ecommmerce.web.app](https://auth-ecommmerce.web.app)
+- **🔧 CI/CD :** Déploiement automatique via GitHub Actions avec stratégie Blue-Green
+- **📊 Status :** [![Build Status](https://github.com/Mheelb/flutter_shop/workflows/Blue-Green%20Deployment/badge.svg)](https://github.com/Mheelb/flutter_shop/actions)
+
+## 🏗️ **Architecture & Stratégie de Déploiement**
+
+### **Blue-Green Deployment**
+- **🔵 Blue (Staging) :** Tests automatisés sur canal preview
+- **🟢 Green (Production) :** Promotion après validation manuelle
+- **🔄 Rollback :** Instantané en cas de problème
+
+### **CI/CD Pipeline**
+1. **Build & Test** → Tests unitaires (>50% coverage)
+2. **Deploy Blue** → Canal preview Firebase
+3. **Smoke Tests** → Validation automatique
+4. **Manual Approval** → Sécurité production
+5. **Deploy Green** → Mise en production
+
+## ✨ **Fonctionnalités**
+
+### **📱 PWA (Progressive Web App)**
+- ✅ Installation native sur desktop/mobile
+- ✅ Service Worker pour cache offline
+- ✅ Manifest PWA complet
+- ✅ Web Share API
+
+### **🛒 E-commerce Features**
+- ✅ Catalogue de produits avec recherche
+- ✅ Panier d'achat persistant
+- ✅ Authentification Firebase
+- ✅ Checkout sécurisé
+- ✅ Gestion des quantités
+
+### **🎯 Spécificités plateformes**
+- ✅ **Web** : PWA avec installation + partage natif
+- ✅ **iOS** : Interface CupertinoPageScaffold  
+- ✅ **Android** : Share intent natif via share_plus
+- ✅ **Responsive** : Grille adaptative 2-5 colonnes
+
+### **🔥 Tech Stack**
+- **Frontend :** Flutter 3.24+ (Web, iOS, Android)
+- **Backend :** Firebase Auth + Firestore
+- **State Management :** Riverpod
+- **Déploiement :** Firebase Hosting + GitHub Actions
+- **Tests :** >50% coverage + CI/CD automatisé
+
+## 🚀 **Installation & Développement**
+
+### **Prérequis**
+```bash
+Flutter 3.24.3+
+Firebase CLI
+Node.js 18+
+```
+
+### **Setup Local**
+```bash
+# Clone du repository
+git clone https://github.com/Mheelb/flutter_shop.git
+cd flutter_shop
+
+# Installation des dépendances
+flutter pub get
+
+# Configuration Firebase
+firebase login
+firebase use --add
+
+# Lancement en développement
+flutter run -d web-server --web-port 3000
+```
+
+### **Build & Déploiement**
+```bash
+# Build production
+flutter build web --release
+
+# Déploiement Firebase
+firebase deploy --only hosting
+
+# Ou utiliser le CI/CD (recommandé)
+git push origin main  # Déploiement automatique
+```
+
+## 🧪 **Tests**
+
+```bash
+# Tests unitaires
+flutter test
+
+# Coverage
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+
+# Tests spécifiques
+flutter test test/unit/
+flutter test test/widget/
+```
+
+## 📱 **Utilisation PWA**
+
+1. **Installation :** Cliquez sur "Installer" dans votre navigateur
+2. **Partage :** Utilisez le bouton de partage natif
+3. **Offline :** L'app fonctionne sans connexion
+4. **Responsive :** Adapté à tous les écrans
+
+## 🔧 **Configuration Firebase**
+
+1. Créer un projet Firebase
+2. Activer Authentication et Firestore
+3. Configurer les domaines autorisés
+4. Déployer les règles de sécurité
+
+## 📊 **Métriques & Monitoring**
+
+- **Performance :** Lighthouse Score > 90
+- **Coverage :** Tests unitaires > 50%
+- **Déploiement :** Automatique avec rollback
+- **Monitoring :** Firebase Analytics
+
+---
+
+**🎯 Développé par :** [Mheelb](https://github.com/Mheelb)  
+**📅 Dernière mise à jour :** Septembre 2025  
+**🌐 URL de production :** [https://auth-ecommmerce.web.app](https://auth-ecommmerce.web.app)

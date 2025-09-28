@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
+import 'theme/app_theme.dart';
 import '../features/auth/presentation/views/login_page.dart';
 import '../features/home/views/home_page.dart';
 
@@ -10,54 +11,8 @@ class ShopApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CinéBox',
-      theme: ThemeData.dark().copyWith(
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF00AC1C), // Letterboxd green
-          secondary: Color(0xFF00AC1C),
-          surface: Color(0xFF14181C),
-          background: Color(0xFF0D0F14),
-          onBackground: Colors.white,
-          onSurface: Colors.white,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0D0F14),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF14181C),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        cardTheme: const CardThemeData(
-          color: Color(0xFF2C3440),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00AC1C),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          filled: true,
-          fillColor: Color(0xFF2C3440),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-            borderSide: BorderSide(color: Color(0xFF00AC1C)),
-          ),
-          labelStyle: TextStyle(color: Colors.white70),
-          hintStyle: TextStyle(color: Colors.white54),
-        ),
-        useMaterial3: true,
-      ),
+      title: 'Flutter Shop',
+      theme: AppTheme.light(),
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
     );

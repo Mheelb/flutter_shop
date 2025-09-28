@@ -1,53 +1,52 @@
-import '../../../movies/domain/models/movie.dart';
-
 class CartItem {
-  final Movie movie;
-  final double price;
-  final DateTime addedAt;
+  final int productId;
+  final int quantity;
 
-  CartItem({
-    required this.movie,
-    required this.price,
-    DateTime? addedAt,
-  }) : addedAt = addedAt ?? DateTime.now();
+  const CartItem({required this.productId, required this.quantity});
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CartItem &&
-          runtimeType == other.runtimeType &&
-          movie.id == other.movie.id;
+  CartItem copyWith({int? productId, int? quantity}) => CartItem(
+        productId: productId ?? this.productId,
+        quantity: quantity ?? this.quantity,
+      );
 
-  @override
-  int get hashCode => movie.id.hashCode;
+  Map<String, dynamic> toJson() => {
+        'id': productId, // Fakestore example used 'id'
+        'productId': productId, // also include canonical key if needed
+        'quantity': quantity,
+      };
+
+  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
+        productId: (json['productId'] ?? json['id']) as int,
+        quantity: (json['quantity'] ?? 1) as int,
+      );
 }
 
 class Cart {
+  final int id;
+  final int userId;
   final List<CartItem> items;
 
-  Cart({this.items = const []});
+  const Cart({required this.id, required this.userId, required this.items});
 
-  double get totalPrice => items.fold(0.0, (sum, item) => sum + item.price);
-  
-  int get itemCount => items.length;
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'userId': userId,
+        'products': items
+            .map((e) => {
+                  'productId': e.productId,
+                  'quantity': e.quantity,
+                })
+            .toList(),
+      };
 
-  bool contains(Movie movie) => items.any((item) => item.movie.id == movie.id);
-
-  Cart addItem(Movie movie, {double price = 4.99}) {
-    if (contains(movie)) return this;
-    
-    final newItems = List<CartItem>.from(items)
-      ..add(CartItem(movie: movie, price: price));
-    
-    return Cart(items: newItems);
-  }
-
-  Cart removeItem(Movie movie) {
-    final newItems = items.where((item) => item.movie.id != movie.id).toList();
-    return Cart(items: newItems);
-  }
-
-  Cart clear() {
-    return Cart(items: []);
+  factory Cart.fromJson(Map<String, dynamic> json) {
+    final products = (json['products'] as List<dynamic>? ?? [])
+        .map((e) => CartItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return Cart(
+      id: (json['id'] ?? 0) as int,
+      userId: (json['userId'] ?? 0) as int,
+      items: products,
+    );
   }
 }
